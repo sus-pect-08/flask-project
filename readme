@@ -1,2 +1,3 @@
 l'autenticazione degli utenti è stata principalmente fatta grazie alla documentazione da moodle
-Utilizzando SQLite come database in un file.
+Utilizzando SQLite per salvataggio di dati tramite sql alchemy.
+Il file confing assegna le variabili d'ambiente.
