@@ -3,9 +3,11 @@ from flask_sqlalchemy import SQLAlchemy
 from flask_login import LoginManager
 from models.model.User import User
 from routes.auth import auth
+from routes.calendar import calendar_bp
 from config import Config
 from models.conn import db
 from flask_migrate import Migrate
+
 
 login_manager = LoginManager()
 
@@ -20,6 +22,7 @@ def create_app():
     login_manager.login_view = 'auth.login'
 
     app.register_blueprint(auth, url_prefix='/auth')
+    app.register_blueprint(calendar_bp)
 
     @login_manager.user_loader
     def load_user(user_id):
