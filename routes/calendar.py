@@ -1,12 +1,13 @@
-
 from flask import Blueprint, render_template
 import calendar
 from datetime import date
+from flask_login import logout_user, login_required,
 
 calendar_bp = Blueprint('calendar', __name__)
 
 @calendar_bp.route('/calendar')
 @calendar_bp.route('/calendar/<int:year>/<int:month>')
+@login_required
 def show_calendar(year=None, month=None):
 
     today = date.today()

@@ -1,0 +1,10 @@
+from models.conn import db
+
+class RoomReservation(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(80), unique=True, nullable=False)
+    room_id = db.Column(db.Integer, db.ForeignKey('room.id'), nullable=False)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+
+    def __repr__(self):
+        return f'<Room Reservation:{self.name} in the {self.room}, Person Presenting:{self.user}>'
