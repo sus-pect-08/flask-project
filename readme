@@ -18,3 +18,5 @@ I partecipati posono visualizzare in dettaglio le attività ma non possono modif
 Pesone non coinvolte nell'attività riescono a vedere l'attività nel calendario.
 
 Il seeder serve per aver le stanze già nel database, econ dei utenti di test, per provare le funzionalità e i permessi.
+
+I test sono stati inizialmente generati con playwrigth e poi sistemati a mano, con commenti e verifiche.
