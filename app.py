@@ -8,7 +8,6 @@ from config import Config
 from models.conn import db
 from flask_migrate import Migrate
 
-
 login_manager = LoginManager()
 
 def create_app():

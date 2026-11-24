@@ -3,6 +3,7 @@ import calendar
 from datetime import date
 from flask_login import logout_user, login_required, current_user
 from models.conn import db
+from models.model.User import User
 from models.model.room import Room
 from models.model.roomReservation import RoomReservation
 
@@ -60,64 +61,37 @@ def show_calendar(year=None, month=None):
 @calendar_bp.route('/activity/create', methods=['GET', 'POST'])
 @login_required
 def create_activity():
-    """Route for creating a new activity/reservation."""
-
     rooms = Room.query.all()
+    users = User.query.all()
 
     if request.method == 'POST':
-        name = request.form.get('name', '').strip()
-        room_id = request.form.get('room_id', '').strip()
+        name = request.form.get('name')
+        detail = request.form.get('detail')
+        room_id = request.form.get('room_id')
+        participant_ids = request.form.getlist('participant_ids')
 
-        # Validate required fields
         if not name or not room_id:
-            flash('All fields are required!', 'danger')
-            return render_template(
-                'dashboard/create_activity.html',
-                rooms=rooms
-            )
-
-        # Validate room ID
-        try:
-            room_id = int(room_id)
-        except (ValueError, TypeError):
-            flash('Please select a valid room.', 'danger')
-            return render_template(
-                'dashboard/create_activity.html',
-                rooms=rooms
-            )
-
-        # Check if the selected room exists
-        room = Room.query.get(room_id)
-
-        if not room:
-            flash('The selected room does not exist.', 'danger')
-            return render_template(
-                'dashboard/create_activity.html',
-                rooms=rooms
-            )
-
-        new_reservation = RoomReservation(
-            name=name,
-            room_id=room_id,
-            user_id=current_user.id
-        )
+            flash('Name and Room are required!', 'danger')
+            return render_template('dashboard/newActivity.html', rooms=rooms, users=users)
 
         try:
+            new_reservation = RoomReservation(
+                name=name,
+                detail=detail,
+                room_id=int(room_id),
+                admin_id=current_user.id
+            )
+
+            if participant_ids:
+                selected_users = User.query.filter(User.id.in_(participant_ids)).all()
+                new_reservation.participants = selected_users
+
             db.session.add(new_reservation)
             db.session.commit()
-
             flash('Activity created successfully!', 'success')
-
             return redirect(url_for('calendar.show_calendar'))
-
-        except Exception:
+        except Exception as e:
             db.session.rollback()
-            flash(
-                'An error occurred while creating the activity.',
-                'danger'
-            )
+            flash(f'Error creating activity: {e}', 'danger')
 
-    return render_template(
-        'dashboard/create_activity.html',
-        rooms=rooms
-    )
+    return render_template('dashboard/newActivity.html', rooms=rooms, users=users)
