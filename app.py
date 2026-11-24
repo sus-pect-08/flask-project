@@ -1,4 +1,4 @@
-from flask import Flask
+from flask import Flask, redirect, url_for
 from flask_sqlalchemy import SQLAlchemy
 from flask_login import LoginManager
 from models.model.User import User
@@ -9,6 +9,8 @@ from models.conn import db
 from flask_migrate import Migrate
 
 login_manager = LoginManager()
+
+#Creazione dell'applicazione
 
 def create_app():
     app = Flask(__name__)
@@ -22,6 +24,10 @@ def create_app():
 
     app.register_blueprint(auth, url_prefix='/auth')
     app.register_blueprint(calendar_bp)
+
+    @app.route('/')
+    def index():
+        return redirect(url_for('auth.login'))
 
     @login_manager.user_loader
     def load_user(user_id):

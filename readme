@@ -1,9 +1,20 @@
-*I template sono principalmente presi da vecchi esempi/esercizi e modificati/generate con l'IA per veloccizzare*
+I template sono principalmente presi da vecchi esempi/esercizi e modificati/generate con l'IA per veloccizzare
 
-l'autenticazione degli utenti è stata principalmente fatta grazie alla documentazione da moodle
+l'autenticazione degli utenti è stata principalmente fatta grazie alla documentazione da moodle, le sue rotte definite nel file auth.py
+
 Utilizzando SQLite per salvataggio di dati tramite sql alchemy.
 Il file confing assegna le variabili d'ambiente.
-@todo
-    modifica delle attività da parte dei admin
-    e visualizzazione dei dettagli della riservazione da parte dei partecipanti
-    altri utenti possono visualizzare la stanza prenotata e l'orario nel calendario
+Le variabili d'ambiente vegono utilizzate per eseguire l'acesso a SQLite (per non avere la chiave hardcoded)
+
+Nel file calendar.py ho gestito le rotte per la definizione del calendario e la gestione delle attività/riservazioni
+
+Mancanze conosciute:
+il file dedicato alle route calendar si occupa della gestione delle attività e del calendario, andando a violare la single responsability
+Risultando un file unico per tante rotte corpose che sono sia GET che POST, includendo la validazione dei dati.
+
+permessi per ogni attività:
+il creatore ha full control, può modificare le attività e/o eliminarle, ma non può cambiare il propritario dell'attività.
+I partecipati posono visualizzare in dettaglio le attività ma non possono modificare nulla.
+Pesone non coinvolte nell'attività riescono a vedere l'attività nel calendario.
+
+Il seeder serve per aver le stanze già nel database, econ dei utenti di test, per provare le funzionalità e i permessi.

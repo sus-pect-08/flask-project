@@ -58,12 +58,15 @@
                         {% if day in reservations_by_day %}
                             <div class="overflow-auto" style="max-height: 70px;">
                                 {% for res in reservations_by_day[day] %}
-                                    <div class="badge bg-secondary text-wrap mb-1 w-100 text-start p-1" style="font-size: 0.65rem;">
-                                        <strong>{{ res.start_time.strftime('%H:%M') }}</strong> {{ res.name }}
-                                    </div>
+                                    <!-- Trasformato in un tag <a> per il dettaglio -->
+                                    <a href="{{ url_for('calendar.view_activity', id=res.id) }}" class="text-decoration-none">
+                                        <div class="badge bg-secondary text-wrap mb-1 w-100 text-start p-1" style="font-size: 0.65rem;">
+                                            <strong>{{ res.start_time.strftime('%H:%M') }}</strong> {{ res.name }}
+                                        </div>
+                                    </a>
                                 {% endfor %}
                             </div>
-                        {% endif %}
+                        {% endif %}    
                     {% endif %}
 
                 </div>

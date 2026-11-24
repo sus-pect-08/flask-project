@@ -1,0 +1,105 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<div class="container mt-4">
+
+    <!-- Page Header -->
+    <div class="row mb-4 align-items-center">
+        <div class="col-2">
+            <a href="{{ url_for('calendar.view_activity', id=reservation.id) }}" class="btn btn-outline-primary">
+                &lt; Back
+            </a>
+        </div>
+        <div class="col-8 text-center">
+            <h3>Edit Activity</h3>
+        </div>
+        <div class="col-2"></div>
+    </div>
+
+    <!-- Edit Form -->
+    <div class="row justify-content-center">
+        <div class="col-md-8 col-lg-6">
+            <div class="card shadow-sm">
+                <div class="card-header bg-warning text-dark">
+                    <h5 class="mb-0">Modify Activity Information</h5>
+                </div>
+                <div class="card-body">
+                    <form method="POST">
+
+                        <!-- Activity Name -->
+                        <div class="mb-3">
+                            <label for="name" class="form-label">Activity Name</label>
+                            <input type="text" class="form-control" id="name" name="name" value="{{ reservation.name }}" required>
+                        </div>
+
+                        <!-- Date Selection -->
+                        <div class="mb-3">
+                            <label for="date" class="form-label">Date</label>
+                            <input type="date" class="form-control" id="date" name="date" value="{{ reservation.date.strftime('%Y-%m-%d') }}" required>
+                        </div>
+
+                        <!-- Time Range -->
+                        <div class="row mb-3">
+                            <div class="col">
+                                <label for="start_time" class="form-label">Start Time</label>
+                                <input type="time" class="form-control" id="start_time" name="start_time" value="{{ reservation.start_time.strftime('%H:%M') }}" required>
+                            </div>
+                            <div class="col">
+                                <label for="end_time" class="form-label">End Time</label>
+                                <input type="time" class="form-control" id="end_time" name="end_time" value="{{ reservation.end_time.strftime('%H:%M') }}" required>
+                            </div>
+                        </div>
+
+                        <!-- Meeting Details -->
+                        <div class="mb-3">
+                            <label for="detail" class="form-label">Meeting Details / Description</label>
+                            <textarea class="form-control" id="detail" name="detail" rows="3">{{ reservation.detail }}</textarea>
+                        </div>
+
+                        <!-- Room Selection -->
+                        <div class="mb-3">
+                            <label for="room_id" class="form-label">Select Room</label>
+                            <select class="form-select" id="room_id" name="room_id" required>
+                                {% for room in rooms %}
+                                    <option value="{{ room.id }}" {% if room.id == reservation.room_id %}selected{% endif %}>
+                                        {{ room.name }}
+                                    </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+
+                        <!-- Participants Selection -->
+                        <div class="mb-3">
+                            <label for="participant_ids" class="form-label">Participants</label>
+                            <select class="form-select" id="participant_ids" name="participant_ids" multiple style="height: 120px;">
+                                {% for user in users %}
+                                    {% if user.id != current_user.id %}
+                                        <option value="{{ user.id }}" {% if user in reservation.participants %}selected{% endif %}>
+                                            {{ user.username }}
+                                        </option>
+                                    {% endif %}
+                                {% endfor %}
+                            </select>
+                            <div class="form-text">Hold down Ctrl (Windows) or Cmd (Mac) to select multiple participants.</div>
+                        </div>
+
+                        <!-- Buttons -->
+                        <div class="d-flex justify-content-between mt-4">
+                            <a href="{{ url_for('calendar.view_activity', id=reservation.id) }}" class="btn btn-outline-secondary">
+                                Cancel
+                            </a>
+                            <button type="submit" class="btn btn-warning">
+                                Save Changes
+                            </button>
+                        </div>
+
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+{% endblock %}

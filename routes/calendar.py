@@ -32,7 +32,6 @@ def show_calendar(year=None, month=None):
     else:
         end_date = date(year, month + 1, 1)
 
-    # Recupera le prenotazioni del mese
     reservations = RoomReservation.query.filter(
         RoomReservation.date >= start_date,
         RoomReservation.date < end_date
@@ -84,23 +83,36 @@ def create_activity():
     if request.method == 'POST':
         name = request.form.get('name')
         detail = request.form.get('detail')
+        date_str = request.form.get('date')
         start_time_str = request.form.get('start_time')
         end_time_str = request.form.get('end_time')
         room_id = request.form.get('room_id')
         participant_ids = request.form.getlist('participant_ids')
 
-        if not name or not room_id or not start_time_str or not end_time_str:
+        if not name or not room_id or not date_str or not start_time_str or not end_time_str:
             flash('All required fields must be filled!', 'danger')
-            return render_template('dashboard/newActivity.html', rooms=rooms, users=users)
+            return render_template('dashboard/newActivity.html', rooms=rooms, users=users, prefilled_date=date_str)
 
         try:
-            reservation_date = datetime.strptime(prefilled_date, '%Y-%m-%d').date()
+            reservation_date = datetime.strptime(date_str, '%Y-%m-%d').date()
             start_time = datetime.strptime(start_time_str, '%H:%M').time()
             end_time = datetime.strptime(end_time_str, '%H:%M').time()
 
             if start_time >= end_time:
                 flash('End time must be later than start time!', 'danger')
-                return render_template('dashboard/newActivity.html', rooms=rooms, users=users)
+                return render_template('dashboard/newActivity.html', rooms=rooms, users=users, prefilled_date=date_str)
+
+            #controllo che una prenotazione non può essere allo steso orario
+            overlapping = RoomReservation.query.filter(
+                RoomReservation.room_id == int(room_id),
+                RoomReservation.date == reservation_date,
+                RoomReservation.start_time < end_time,
+                RoomReservation.end_time > start_time
+            ).first()
+
+            if overlapping:
+                flash('The selected room is already booked for this time slot!', 'danger')
+                return render_template('dashboard/newActivity.html', rooms=rooms, users=users, prefilled_date=date_str)
 
             new_reservation = RoomReservation(
                 name=name,
@@ -119,9 +131,121 @@ def create_activity():
             db.session.add(new_reservation)
             db.session.commit()
             flash('Activity created successfully with schedule!', 'success')
-            return redirect(url_for('calendar.calendar'))
+            
+            return redirect(url_for('calendar.show_calendar'))
+            
         except Exception as e:
             db.session.rollback()
             flash(f'Error creating activity: {e}', 'danger')
 
-    return render_template('dashboard/newActivity.html', rooms=rooms, users=users)
+    return render_template('dashboard/newActivity.html', rooms=rooms, users=users, prefilled_date=prefilled_date)
+
+#Visualizzazione di una singola attività da parte dei partecipanti
+
+@calendar_bp.route('/activity/<int:id>')
+@login_required
+def view_activity(id):
+    reservation = RoomReservation.query.get_or_404(id)
+    
+    is_admin = reservation.admin_id == current_user.id
+    is_participant = current_user in reservation.participants
+    
+    if not is_admin and not is_participant:
+        flash('You do not have permission to view this activity.', 'danger')
+        return redirect(url_for('calendar.show_calendar'))
+        
+    return render_template('dashboard/activity_detail.html', reservation=reservation)
+
+#Modifica dell'attività solo disponibile all'admin
+
+@calendar_bp.route('/activity/<int:id>/edit', methods=['GET', 'POST'])
+@login_required
+def edit_activity(id):
+    reservation = RoomReservation.query.get_or_404(id)
+
+    if reservation.admin_id != current_user.id:
+        flash('You do not have permission to edit this activity.', 'danger')
+        return redirect(url_for('calendar.show_calendar'))
+
+    rooms = Room.query.all()
+    users = User.query.all()
+
+    if request.method == 'POST':
+        name = request.form.get('name')
+        detail = request.form.get('detail')
+        date_str = request.form.get('date')
+        start_time_str = request.form.get('start_time')
+        end_time_str = request.form.get('end_time')
+        room_id = request.form.get('room_id')
+        participant_ids = request.form.getlist('participant_ids')
+
+        if not name or not room_id or not date_str or not start_time_str or not end_time_str:
+            flash('All required fields must be filled!', 'danger')
+            return render_template('dashboard/edit_activity.html', reservation=reservation, rooms=rooms, users=users)
+
+        try:
+            new_date = datetime.strptime(date_str, '%Y-%m-%d').date()
+            new_start_time = datetime.strptime(start_time_str, '%H:%M').time()
+            new_end_time = datetime.strptime(end_time_str, '%H:%M').time()
+
+            if new_start_time >= new_end_time:
+                flash('End time must be later than start time!', 'danger')
+                return render_template('dashboard/edit_activity.html', reservation=reservation, rooms=rooms, users=users)
+
+            # Controllo sovrapposizione escludendo l'attività corrente
+            overlapping = RoomReservation.query.filter(
+                RoomReservation.room_id == int(room_id),
+                RoomReservation.date == new_date,
+                RoomReservation.start_time < new_end_time,
+                RoomReservation.end_time > new_start_time,
+                RoomReservation.id != reservation.id
+            ).first()
+
+            if overlapping:
+                flash('The selected room is already booked for this time slot!', 'danger')
+                return render_template('dashboard/edit_activity.html', reservation=reservation, rooms=rooms, users=users)
+
+            reservation.date = new_date
+            reservation.start_time = new_start_time
+            reservation.end_time = new_end_time
+            reservation.name = name
+            reservation.detail = detail
+            reservation.room_id = int(room_id)
+
+            if participant_ids:
+                selected_users = User.query.filter(User.id.in_(participant_ids)).all()
+                reservation.participants = selected_users
+            else:
+                reservation.participants = []
+
+            db.session.commit()
+            flash('Activity updated successfully!', 'success')
+            return redirect(url_for('calendar.view_activity', id=reservation.id))
+
+        except Exception as e:
+            db.session.rollback()
+            flash(f'Error updating activity: {e}', 'danger')
+
+    return render_template('dashboard/edit_activity.html', reservation=reservation, rooms=rooms, users=users)
+
+
+#Eliminazione di un attività
+ 
+@calendar_bp.route('/activity/<int:id>/delete', methods=['POST'])
+@login_required
+def delete_activity(id):
+    reservation = RoomReservation.query.get_or_404(id)
+
+    if reservation.admin_id != current_user.id:
+        flash('You do not have permission to delete this activity.', 'danger')
+        return redirect(url_for('calendar.show_calendar'))
+
+    try:
+        db.session.delete(reservation)
+        db.session.commit()
+        flash('Activity deleted successfully!', 'success')
+    except Exception as e:
+        db.session.rollback()
+        flash(f'Error deleting activity: {e}', 'danger')
+
+    return redirect(url_for('calendar.show_calendar'))

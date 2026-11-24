@@ -10,7 +10,7 @@ auth = Blueprint('auth', __name__)
 @auth.route('/login', methods=['GET'])
 def login():
     if current_user.is_authenticated:
-        return redirect(url_for('auth.profile'))
+        return redirect(url_for('calendar.show_calendar'))
 
     return render_template('auth/login.html')
 
@@ -30,7 +30,7 @@ def login_post():
         return redirect(url_for('auth.login'))
 
     login_user(user, remember=remember)
-    return redirect(url_for('auth.profile'))#change url 
+    return redirect(url_for('calendar.show_calendar'))
 
 
 @auth.route('/signup', methods=['GET'])
@@ -72,12 +72,6 @@ def signup_post():
 
     flash('Account created successfully.')
     return redirect(url_for('auth.login'))
-
-
-@auth.route('/profile')
-@login_required
-def profile():
-    return render_template('auth/profile.html')
 
 
 @auth.route('/logout')
