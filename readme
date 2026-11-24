@@ -1,3 +1,6 @@
 l'autenticazione degli utenti è stata principalmente fatta grazie alla documentazione da moodle
 Utilizzando SQLite per salvataggio di dati tramite sql alchemy.
 Il file confing assegna le variabili d'ambiente.
+@todo
+Aggiungi ruoli agli utenti, manager possono riservare stanze, 
+e dipendenti normali possono essere aggiunti ai meeting o alle conferenze.
