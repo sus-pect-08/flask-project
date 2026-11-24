@@ -20,5 +20,6 @@ Pesone non coinvolte nell'attività riescono a vedere l'attività nel calendario
 Il seeder serve per aver le stanze già nel database, econ dei utenti di test, per provare le funzionalità e i permessi.
 
 I test sono stati inizialmente generati con playwrigth e poi sistemati a mano, con commenti e verifiche.
+per avviarli entrare nel virtual enviorment e utilizzare il comando 'pytest'
 
 il file .env si trova in un file .env.example
